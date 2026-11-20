@@ -74,11 +74,29 @@ services:
     networks:
       - monitoring
     restart: unless-stopped
+
+ 
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:roi
+      - promtail_positions:/var/lib/promtail
+    command:
+      - -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki    
     
 volumes:
  prometheus_data: {}
  grafana_data: {}
  loki_data: {}
+ promtail_positions: {}
 
 networks:
   monitoring:
