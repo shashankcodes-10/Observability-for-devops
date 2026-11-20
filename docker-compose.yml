@@ -91,7 +91,65 @@ services:
       - monitoring
     depends_on:
       - loki    
-    
+
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo_data:/var/tempo
+    expose:
+      - 3200   # Tempo query API (Grafana reads from here)
+      - 4317   # OTLP gRPC (Collector writes here)
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel-collector/otel-collector-config.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   
+      - "4318:4318"   
+    expose:
+      - 8889      
+      - 8888        
+    depends_on:
+      - loki
+      - tempo
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  notes-app:
+    image: notes-app:latest
+    build:
+      context: ./notes-app
+      dockerfile: Dockerfile
+    container_name: notes-app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: notesapp.settings 
+      OTEL_SERVICE_NAME: notes-app
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
+      OTEL_METRIC_EXPORT_INTERVAL: "15000"  
+    depends_on:
+      - otel-collector
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+
 volumes:
  prometheus_data: {}
  grafana_data: {}
