@@ -1,0 +1,6 @@
+# Sensitive credentials
+secrets/
+
+# Environment files
+.env
+.env.*
