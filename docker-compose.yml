@@ -63,7 +63,7 @@ services:
 
 
 volumes:
- prometheus_data: {}i
+ prometheus_data: {}
  grafana_data: {}
 
 networks:
