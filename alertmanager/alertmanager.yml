@@ -1,0 +1,13 @@
+route:
+  receiver: email-alerts
+
+receivers:
+  - name: email-alerts
+    email_configs:
+      - to: u10shashank@gmail.com
+        from: u10shashank@gmail.com
+        smarthost: smtp.gmail.com:587
+        auth_username: u10shashank@gmail.com
+        auth_password_file: /etc/alertmanager/secrets/gmail_app_password
+        require_tls: true
+        send_resolved: true
